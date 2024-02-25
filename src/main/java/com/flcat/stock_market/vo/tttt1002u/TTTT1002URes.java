@@ -14,5 +14,5 @@ public class TTTT1002URes {
     private String ctx_area_fk200;
     private String ctx_area_nk200;
     private List<TTTT1002UDetailDTO> output1;
-    private List<TTTT1002UPriceDTO> output2;
+    private Object output2;
 }

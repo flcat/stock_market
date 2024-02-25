@@ -22,21 +22,18 @@ repositories {
 }
 
 dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
-	implementation 'org.springframework.boot:spring-boot-starter-validation'
-	implementation 'org.springframework.boot:spring-boot-starter-websocket'
 	implementation 'org.springframework.boot:spring-boot-starter-test'
-	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-	implementation 'jakarta.ws.rs:jakarta.ws.rs-api'
+	// https://mvnrepository.com/artifact/jakarta.ws.rs/jakarta.ws.rs-api
+	implementation 'jakarta.ws.rs:jakarta.ws.rs-api:3.1.0'
+	implementation 'javax.ws.rs:javax.ws.rs-api:2.1.1'
 	implementation 'com.slack.api:slack-api-client:1.38.1'
 	compileOnly 'org.projectlombok:lombok'
-	runtimeOnly 'com.h2database:h2'
-	runtimeOnly 'org.postgresql:postgresql'
 	annotationProcessor 'org.projectlombok:lombok'
-	// https://mvnrepository.com/artifact/javax.xml.bind/jaxb-api
-	implementation group: 'javax.xml.bind', name: 'jaxb-api', version: '2.4.0-b180830.0359'
 
+
+	implementation"org.glassfish.jersey.core:jersey-common:2.27"
+	compileOnly"io.atlassian.fugue:fugue:5.0.0"
 
 }
 

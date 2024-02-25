@@ -1,10 +1,10 @@
 package com.flcat.stock_market.util;
 
 import com.flcat.stock_market.exception.FailedResponseException;
-import jakarta.ws.rs.core.UriBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import javax.ws.rs.core.UriBuilder;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;

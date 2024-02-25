@@ -7,7 +7,8 @@ import com.flcat.stock_market.vo.TokenCreateReq;
 import com.flcat.stock_market.vo.TokenCreateRes;
 import com.flcat.stock_market.vo.TokenRemoveReq;
 import com.flcat.stock_market.vo.TokenRemoveRes;
-import jakarta.ws.rs.core.HttpHeaders;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -23,6 +24,7 @@ public class AuthenticationManager {
     private TokenCreateRes tokenCreateRes;
     private boolean auth = false;
 
+    @Autowired
     public AuthenticationManager(KisConfig kisConfig) {
         this.httpRequester = new HttpRequester();
         this.tokenCreateReq = new TokenCreateReq(kisConfig);

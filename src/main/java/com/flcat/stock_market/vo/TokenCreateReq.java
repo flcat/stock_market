@@ -21,5 +21,6 @@ public class TokenCreateReq {
     public TokenCreateReq(KisConfig kisConfig) {
         this.appKey = kisConfig.getAPPKEY();
         this.appSecret = kisConfig.getAPPSECRET();
+        this.grantType = getGrantType();
     }
 }
