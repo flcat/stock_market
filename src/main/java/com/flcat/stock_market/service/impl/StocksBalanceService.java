@@ -1,5 +1,6 @@
 package com.flcat.stock_market.service.impl;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.flcat.stock_market.config.KisConfig;
 import com.flcat.stock_market.exception.FailedAuthenticationException;
 import com.flcat.stock_market.service.SlackService;
@@ -15,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -32,6 +34,7 @@ public class StocksBalanceService {
     private SlackService slackService;
 
     public void execute() throws Exception {
+        ObjectMapper objectMapper = new ObjectMapper();
 
         if (!this.authenticationManager.isAuth()) {
             throw new FailedAuthenticationException();
@@ -40,20 +43,22 @@ public class StocksBalanceService {
         RequestPaper requestPaper = this.createPaper();
         System.out.println(this.createPaper().toString());
         TTTT1002URes response = this.httpRequester.call(requestPaper, TTTT1002URes.class);
+        Object object = response.getOutput2();
+        String json = objectMapper.writeValueAsString(object);
+        List<TTTT1002UBalanceDTO> dtos = Arrays.asList(objectMapper.readValue(json, TTTT1002UBalanceDTO.class));
 
-        Object detailDTOObject = response.getOutput1();
-        if (detailDTOObject == null) {
+        if (object == null) {
             return;
         }
 
-        String message = this.createMessage(response);
+        String message = this.createMessage(dtos);
         sendMessageToUser(message);
     }
 
     private void sendMessageToUser(String message) {
         String title = "========================";
         HashMap<String, String> data = new HashMap<>();
-        data.put("cano", message);
+        data.put("계좌 잔고", message);
         slackService.sendMessage(title,data);
     }
 
@@ -76,13 +81,20 @@ public class StocksBalanceService {
                 .putQueryParam("CTX_AREA_NK200", "");
     }
 
-    private String createMessage(TTTT1002URes response) {
-        List<TTTT1002UDetailDTO> detailDTOList = response.getOutput1();
+    private String createMessage(List<TTTT1002UBalanceDTO> dtos) {
 
         StringBuilder message = new StringBuilder();
 
-        for (TTTT1002UDetailDTO row : detailDTOList) {
-            message.append(row.getCano());
+        for (TTTT1002UBalanceDTO row : dtos) {
+            message.append("외화매입금액1 : " + row.getFrcr_pchs_amt1() + "\n");
+            message.append("해외실현손익금액 : " + row.getOvrs_rlzt_pfls_amt() + "\n");
+            message.append("해외총손익 : " + row.getOvrs_tot_pfls() + "\n");
+            message.append("실현수익율 : " + row.getRlzt_erng_rt() + "\n");
+            message.append("총평가손익금액 : " + row.getTot_evlu_pfls_amt() + "\n");
+            message.append("총수익율 : " + row.getTot_pftrt() + "\n");
+            message.append("외화매수금액합계1 : " + row.getFrcr_buy_amt_smtl1() + "\n");
+            message.append("해외실현손익금액2 : " + row.getOvrs_rlzt_pfls_amt2() + "\n");
+            message.append("외화매수금액합계2 : " + row.getFrcr_buy_amt_smtl2() + "\n");
         }
 
         return message.toString();

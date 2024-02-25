@@ -15,7 +15,8 @@ public class TTTT1002UBalanceDTO {
     private String msg1;
     private String ctx_area_fk200;
     private String ctx_area_nk200;
-    private List<TTTT1002UDetailDTO> output1;
+    private List<TTTT1002UBalanceDTO> output1;
+    private List<TTTT1002UBalanceDTO> output2;
     private String cano;
     private String acnt_prdt_cd;
     private String prdt_type_cd;
