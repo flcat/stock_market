@@ -7,20 +7,13 @@ import lombok.Data;
 
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class TokenCreateReq {
-
-    @JsonProperty("grant_type")
-    private String grantType;
-
+public class ApprovalKeyReq {
     @JsonProperty("appkey")
     private String appKey;
-
-    @JsonProperty("appsecret")
+    @JsonProperty("secretkey")
     private String appSecret;
-
-    public TokenCreateReq(KisConfig kisConfig) {
+    public ApprovalKeyReq(KisConfig kisConfig) {
         this.appKey = kisConfig.getAPPKEY();
         this.appSecret = kisConfig.getAPPSECRET();
-        this.grantType = kisConfig.getGrantType();
     }
 }

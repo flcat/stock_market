@@ -13,7 +13,7 @@ public class RequestPaper {
     private final Map<String, String> header;
     private final Map<String, String> queryParam;
     private HttpRequest.BodyPublisher body;
-//    private String bodyStr;
+    private String bodyStr;
 
     public RequestPaper(){
         this.header = new HashMap<>();
@@ -54,7 +54,7 @@ public class RequestPaper {
         } else {
             jsonStr = HttpRequestHelper.objectToString(object);
         }
-//        this.bodyStr = jsonStr;
+        this.bodyStr = jsonStr;
         this.body = HttpRequest.BodyPublishers.ofString(jsonStr);
 
         return this;
@@ -70,7 +70,7 @@ public class RequestPaper {
         sb.append(System.lineSeparator());
         this.mapToString("header", this.header, sb);
         this.mapToString("queryParam", this.queryParam, sb);
-//        sb.append("bodyStr : ").append(this.bodyStr);
+        sb.append("bodySTR : ").append(this.bodyStr);
         return sb.toString();
     }
 

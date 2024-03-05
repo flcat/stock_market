@@ -13,6 +13,10 @@ public class TTTT1002URes {
     private String msg1;
     private String ctx_area_fk200;
     private String ctx_area_nk200;
-    private List<TTTT1002UDetailDTO> output1;
+    private List<TTTT1002UOrder> output;
+    private List<TTTT1002UBalanceDTO> output1;
+    private String KRX_FWDG_ORD_ORGNO;
+    private String ODNO;
+    private String ORD_TMD;
     private Object output2;
 }

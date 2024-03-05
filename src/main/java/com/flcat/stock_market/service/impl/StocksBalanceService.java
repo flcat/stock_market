@@ -1,5 +1,6 @@
 package com.flcat.stock_market.service.impl;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.flcat.stock_market.config.KisConfig;
 import com.flcat.stock_market.exception.FailedAuthenticationException;
@@ -9,7 +10,6 @@ import com.flcat.stock_market.util.HttpRequester;
 import com.flcat.stock_market.util.KiRequestHelper;
 import com.flcat.stock_market.util.RequestPaper;
 import com.flcat.stock_market.vo.tttt1002u.TTTT1002UBalanceDTO;
-import com.flcat.stock_market.vo.tttt1002u.TTTT1002UDetailDTO;
 import com.flcat.stock_market.vo.tttt1002u.TTTT1002URes;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,6 +44,7 @@ public class StocksBalanceService {
         System.out.println(this.createPaper().toString());
         TTTT1002URes response = this.httpRequester.call(requestPaper, TTTT1002URes.class);
         Object object = response.getOutput2();
+        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         String json = objectMapper.writeValueAsString(object);
         List<TTTT1002UBalanceDTO> dtos = Arrays.asList(objectMapper.readValue(json, TTTT1002UBalanceDTO.class));
 
@@ -66,7 +67,7 @@ public class StocksBalanceService {
         String accountNo = this.kisConfig.getAccountNo();
         return new RequestPaper()
                 .setMethod("GET")
-                .setUri("https://openapi.koreainvestment.com:9443/uapi/overseas-stock/v1/trading/inquire-balance")
+                .setUri(kisConfig.getREST_BASE_URL()+"/uapi/overseas-stock/v1/trading/inquire-balance")
                 .putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
                 .putHeader("gt_uid", KiRequestHelper.makeGtUid())
                 .putHeader("authorization", "Bearer " + this.authenticationManager.getToken())
