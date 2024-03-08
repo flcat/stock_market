@@ -1,3 +1,9 @@
+.csv
+!**/stock_list/
+ovrs.properties
+application.properties
+resources/
+!**/src/main/**/
 HELP.md
 .gradle
 build/
