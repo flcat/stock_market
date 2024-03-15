@@ -78,19 +78,6 @@ public class WebsocketService {
         timer.scheduleAtFixedRate(timerTask, delay, interval);
     }
 
-    private String selectMarket() {
-        ZonedDateTime currentTime = ZonedDateTime.now();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH", Locale.US);
-        String formattedTime = currentTime.format(formatter);
-        String dayTime = "";
-        if(Integer.parseInt(formattedTime) < 12) {
-            dayTime = "RBAQ";
-        } else {
-            dayTime = "DNAS";
-        }
-        return dayTime + "AAPL";
-    }
-
     public void doSendJson() {
         Properties properties = readProperties("ovrs.properties");
 
@@ -107,8 +94,7 @@ public class WebsocketService {
 //                    System.out.println(message);
 //                }
 //            });
-        String stockCode = selectMarket();
-        showMessage(stockCode);
+
     }
 
     private void showMessage(String stockCode) {

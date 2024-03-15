@@ -8,11 +8,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.*;
+import org.zeroturnaround.exec.ProcessExecutor;
+import org.zeroturnaround.exec.stream.LogOutputStream;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 
 @Slf4j
 @RestController
@@ -68,19 +71,36 @@ public class LiveStocksController {
             this.finishedInfoLog("order", startTime);
         }
     }
-    @MessageMapping("/queue/market_price")
+    @GetMapping("/get/market_price")
 //    @Scheduled(cron = "${job.cron.ki.market_price}")
-    public void getMarketPrice() {
+    public void getMarketPrice() throws IOException, InterruptedException {
         long startTime = System.currentTimeMillis();
+        String arg = "python_workspace/stock_list/nasdaq100_data_crawling.py";
+        ProcessBuilder processBuilder = new ProcessBuilder("/usr/local/bin/python3", arg).inheritIO();
+        Process p = processBuilder.start();
+        p.waitFor();
+        BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream(), "UTF-8"));
+
         try {
-            this.startedInfoLog("marketPrice");
-            this.websocketService.doSendJson();
+            this.startedInfoLog("python code");
+            String line = "";
+            while ((line= br.readLine()) != null) {
+                System.out.println(line);
+            }
         } catch (Exception e) {
             log.error(e.getMessage(), e);
         } finally {
-            this.finishedInfoLog("marketPrice", startTime);
+            try {
+                if (br != null) {
+                    br.close();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            this.finishedInfoLog("python code", startTime);
         }
     }
+
 
     private void startedInfoLog(String methodName) {
         if (log.isInfoEnabled()) {
