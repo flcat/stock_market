@@ -35,8 +35,13 @@ dependencies {
 	implementation 'org.webjars:webjars-locator-core'
 	implementation 'org.webjars:sockjs-client:1.5.1'
 	implementation 'org.webjars:stomp-websocket:2.3.4'
+	// https://mvnrepository.com/artifact/org.postgresql/postgresql
+	implementation 'org.postgresql:postgresql:42.6.0'
 	// https://mvnrepository.com/artifact/com.h2database/h2
-	testImplementation 'com.h2database:h2:2.2.224'
+	implementation 'com.h2database:h2:2.2.224'
+	// https://mvnrepository.com/artifact/org.zeroturnaround/zt-exec
+	implementation 'org.zeroturnaround:zt-exec:1.12'
+
 
 
 

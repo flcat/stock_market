@@ -41,7 +41,7 @@ def save_to_csv_from_yahoo(folder, ticker, syear, smonth, sday, eyear, emonth, e
             stocks_not_downloaded.append(ticker)
             pass
         time.sleep(10)
-        df.to_csv(f"{ticker}.csv")
+        df.to_csv('{ticker}.csv'.format(ticker=ticker))
 
     except Exception as ex:
             stocks_not_downloaded.append(ticker)
