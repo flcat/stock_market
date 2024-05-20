@@ -2,10 +2,9 @@ package com.flcat.stock_market.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
@@ -18,11 +17,11 @@ public class StockData {
     private Long id;
     private String symbol;
     private LocalDate date;
-    private double openPrice;
-    private double highPrice;
-    private double lowPrice;
-    private double closePrice;
-    private double volume;
-    private double movingAverage;
+    private BigDecimal open;
+    private BigDecimal high;
+    private BigDecimal low;
+    private BigDecimal close;
+    private BigDecimal volume;
+    private BigDecimal movingAverage;
 
 }

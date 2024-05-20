@@ -1,6 +1,6 @@
 package com.flcat.stock_market.service;
 
-import com.flcat.stock_market.dto.OverseasPriceDto;
+import com.flcat.stock_market.dto.Stock;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -21,13 +21,14 @@ public class SlackService {
         this.webhookUrl = webhookUrl;
     }
 
-    public void sendStockPriceToSlack(List<OverseasPriceDto> stockList) {
+    public void sendStockPriceToSlack(List<Stock> stockList) {
         StringBuilder message = new StringBuilder();
-        for (OverseasPriceDto stock : stockList) {
-            message.append("Ticker: ").append(stock.getRsym()).append("\n");
-            message.append("Price: ").append(stock.getLast()).append("\n");
-            message.append("Volume: ").append(stock.getTvol()).append("\n");
-            message.append("Change: ").append(stock.getDiff()).append(" (").append(stock.getRate()).append(")\n");
+        for (Stock stock : stockList) {
+            message.append("Open: ").append(stock.getOpen()).append("\n");
+            message.append("High: ").append(stock.getHigh()).append("\n");
+            message.append("Low: ").append(stock.getLow()).append("\n");
+            message.append("Close: ").append(stock.getClose()).append("\n");
+            message.append("Volume: ").append(stock.getVolume()).append("\n");
             message.append("\n");
         }
 

@@ -6,6 +6,7 @@ import com.flcat.stock_market.dto.TradeSignal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,17 +21,20 @@ public class QuantService {
         List<TradeSignal> tradeSignals = new ArrayList<>();
 
         boolean isHolding = false;
-        double currentPrice = 0.0;
-        double buyPrice = 0.0;
+        BigDecimal currentPrice = BigDecimal.ZERO;
+        BigDecimal buyPrice = BigDecimal.ZERO;
 
         for (StockData data : stockData) {
-            if (!isHolding && data.getClosePrice() > data.getMovingAverage()) {
+            BigDecimal closePrice = data.getClose();
+            BigDecimal movingAverage = data.getMovingAverage();
+
+            if (!isHolding && closePrice.compareTo(movingAverage) > 0) {
                 isHolding = true;
-                buyPrice = data.getClosePrice();
-                tradeSignals.add(new TradeSignal(data.getDate(), "Buy", data.getClosePrice()));
-            } else if (isHolding && data.getClosePrice() < data.getMovingAverage()) {
+                buyPrice = closePrice;
+                tradeSignals.add(new TradeSignal(data.getDate(), "Buy", closePrice));
+            } else if (isHolding && closePrice.compareTo(movingAverage) < 0) {
                 isHolding = false;
-                currentPrice = data.getClosePrice();
+                currentPrice = closePrice;
                 tradeSignals.add(new TradeSignal(data.getDate(), "Sell", currentPrice));
             }
         }

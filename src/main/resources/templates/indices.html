@@ -12,7 +12,6 @@
     <div th:replace="/nav.html :: fragment-nav"></div>
 
     <div class="h4 pb-2 mb-4 text-danger border-bottom border-info"></div>
-    <div><span>조회시간: </span><span th:text="${jobDate}" ></span></div>
     <div class="card">
         <div class="card-header">
             <h2>국내 지수</h2>
@@ -20,12 +19,7 @@
         <div class="card-body">
             <table class="table">
                 <tbody>
-                <tr th:each="indexData : ${indicesKor}">
-                    <td th:text="${indexData.output1.hts_kor_isnm}" ></td>
-                    <td th:text="${indexData.output1.bstp_nmix_prpr}"></td>
-                    <td th:text="${indexData.output1.bstp_nmix_prdy_vrss}" th:style="${indexData.output1.prdy_vrss_sign<'3'?'color:red':(indexData.output1.prdy_vrss_sign>'3'?'color:blue':'color:black')}"></td>
-                    <td th:text="${indexData.output1.bstp_nmix_prdy_ctrt}" th:style="${indexData.output1.prdy_vrss_sign<'3'?'color:red':(indexData.output1.prdy_vrss_sign>'3'?'color:blue':'color:black')}"></td>
-                </tr>
+
                 </tbody>
             </table>
 

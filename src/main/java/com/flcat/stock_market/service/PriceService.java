@@ -1,6 +1,6 @@
 package com.flcat.stock_market.service;
 
-import com.flcat.stock_market.dto.OverseasPriceDto;
+import com.flcat.stock_market.dto.Stock;
 import com.flcat.stock_market.exception.InvalidJsonFormatException;
 import com.flcat.stock_market.exception.MarketPriceException;
 import com.google.gson.JsonArray;
@@ -20,6 +20,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -30,20 +31,21 @@ import java.util.stream.Collectors;
 public class PriceService {
     private final Logger logger = LoggerFactory.getLogger(PriceService.class);
 
-    public Page<OverseasPriceDto> getMarketPriceFromPython(String ticker, String search, Pageable pageable) throws IOException, InterruptedException {
+    public Page<Stock> getMarketPriceFromPython(String ticker, String search, Pageable pageable) throws IOException, InterruptedException {
         String result = executeMarketPriceScript(ticker, search);
-        List<OverseasPriceDto> stockList = parseJsonResult(result);
-        List<OverseasPriceDto> filteredStockList = filterStockList(stockList, search);
+        List<Stock> stockList = parseJsonResult(result);
+        List<Stock> filteredStockList = filterStockList(stockList, search);
 
         int start = (int) pageable.getOffset();
         int end = (int) (Math.min((start + pageable.getPageSize()), filteredStockList.size()));
-        List<OverseasPriceDto> paginatedStockList = filteredStockList.subList(start, end);
+        List<Stock> paginatedStockList = filteredStockList.subList(start, end);
 
         return new PageImpl<>(paginatedStockList, pageable, filteredStockList.size());
     }
 
     private String executeMarketPriceScript(String ticker, String search) throws IOException, InterruptedException {
-        String pythonScript = "/home/user/python_workspace/stock_list/nasdaq100_data_crawling.py";
+//        String pythonScript = "/home/user/python_workspace/stock_list/nasdaq100_data_crawling.py";
+        String pythonScript = "/python_workspace/stock_list/nasdaq100_data_crawling.py";
         String[] command = {"/usr/bin/python3", pythonScript, ticker, search};
 
         ProcessBuilder processBuilder = new ProcessBuilder(command);
@@ -72,33 +74,24 @@ public class PriceService {
         }
     }
 
-    private List<OverseasPriceDto> parseJsonResult(String result) {
+    private List<Stock> parseJsonResult(String result) {
         try {
             JsonElement jsonElement = JsonParser.parseString(result);
             JsonArray jsonArray = jsonElement.getAsJsonArray();
-            List<OverseasPriceDto> priceList = new ArrayList<>();
+            List<Stock> priceList = new ArrayList<>();
 
             for (JsonElement element : jsonArray) {
                 JsonObject jsonObject = element.getAsJsonObject();
-                JsonObject outputObject = jsonObject.getAsJsonObject("output");
 
-                OverseasPriceDto priceDto = OverseasPriceDto.builder()
-                        .rt_cd(jsonObject.get("rt_cd").getAsString())
-                        .msg_cd(jsonObject.get("msg_cd").getAsString())
-                        .msg1(jsonObject.get("msg1").getAsString())
-                        .rsym(outputObject.get("rsym").getAsString())
-                        .zdiv(outputObject.get("zdiv").getAsString())
-                        .base(outputObject.get("base").getAsString())
-                        .pvol(outputObject.get("pvol").getAsString())
-                        .last(String.valueOf(outputObject.get("last").getAsBigDecimal()))
-                        .sign(outputObject.get("sign").getAsString())
-                        .diff(String.valueOf(outputObject.get("diff").getAsBigDecimal()))
-                        .rate(outputObject.get("rate").getAsString())
-                        .tvol(outputObject.get("tvol").getAsString())
-                        .tamt(outputObject.get("tamt").getAsString())
-                        .ordy(outputObject.get("ordy").getAsString())
+                Stock stock = Stock.builder()
+                        .date(LocalDate.parse(jsonObject.get("date").getAsString()))
+                        .open(jsonObject.get("open").getAsJsonObject().getAsBigDecimal())
+                        .high(jsonObject.get("high").getAsJsonObject().getAsBigDecimal())
+                        .low(jsonObject.get("low").getAsJsonObject().getAsBigDecimal())
+                        .close(jsonObject.get("close").getAsJsonObject().getAsBigDecimal())
+                        .volume(jsonObject.get("volume").getAsJsonObject().getAsBigDecimal())
                         .build();
-                priceList.add(priceDto);
+                priceList.add(stock);
             }
 
             return priceList;
@@ -111,12 +104,12 @@ public class PriceService {
         }
     }
 
-    private List<OverseasPriceDto> filterStockList(List<OverseasPriceDto> stockList, String search) {
+    private List<Stock> filterStockList(List<Stock> stockList, String search) {
         if (search.isEmpty()) {
             return stockList;
         }
         return stockList.stream()
-                .filter(stock -> stock.getRsym().toLowerCase().contains(search.toLowerCase()))
+                .filter(stock -> stock.toString().toLowerCase().contains(search.toLowerCase()))
                 .collect(Collectors.toList());
     }
 }

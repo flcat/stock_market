@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Getter
@@ -13,9 +14,9 @@ import java.time.LocalDate;
 public class TradeSignal {
     private LocalDate date;
     private String action;
-    private double price;
+    private BigDecimal price;
 
-    public TradeSignal(LocalDate date, String action, double price) {
+    public TradeSignal(LocalDate date, String action, BigDecimal price) {
         this.date = date;
         this.action = action;
         this.price = price;
