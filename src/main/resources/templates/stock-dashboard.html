@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Stock Dashboard</title>
+  <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+<body>
+<header>
+  <h1>Stock Dashboard</h1>
+</header>
+
+<main>
+  <section class="stock-list">
+    <h2>Stock List</h2>
+    <table>
+      <thead>
+      <tr>
+        <th>Symbol</th>
+        <th>Price</th>
+        <th>Change</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="stock : ${stocks}">
+        <td th:text="${stock.symbol}"></td>
+        <td th:text="${#numbers.formatDecimal(stock.price, 0, 2)}"></td>
+        <td th:text="${#numbers.formatDecimal(stock.change, 0, 2)}"></td>
+      </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="stock-detail">
+    <h2>Stock Detail</h2>
+    <div th:if="${selectedStock}">
+      <p>Symbol: <span th:text="${selectedStock.symbol}"></span></p>
+      <p>Price: <span th:text="${#numbers.formatDecimal(selectedStock.price, 0, 2)}"></span></p>
+      <p>Change: <span th:text="${#numbers.formatDecimal(selectedStock.change, 0, 2)}"></span></p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <p>&copy; 2024 Stock Dashboard</p>
+</footer>
+
+<style>
+  /* Global Styles */
+  body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+  }
+
+  header {
+    background-color: #333;
+    color: #fff;
+    padding: 20px;
+    text-align: center;
+  }
+
+  main {
+    padding: 20px;
+  }
+
+  footer {
+    background-color: #333;
+    color: #fff;
+    padding: 10px;
+    text-align: center;
+  }
+
+  /* Section Styles */
+  .stock-list, .stock-detail {
+    margin-bottom: 40px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  th, td {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+  }
+
+  th {
+    background-color: #f2f2f2;
+  }
+
+  .stock-detail p {
+    margin: 10px 0;
+  }
+</style>
+</body>
+</html>
