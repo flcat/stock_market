@@ -1,7 +1,7 @@
 package com.flcat.stock_market.controller;
 
 import com.flcat.stock_market.dto.TradeSignal;
-import com.flcat.stock_market.service.impl.QuantService;
+import com.flcat.stock_market.service.QuantService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

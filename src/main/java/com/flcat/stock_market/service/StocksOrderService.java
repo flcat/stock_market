@@ -1,4 +1,4 @@
-package com.flcat.stock_market.service.impl;
+package com.flcat.stock_market.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;

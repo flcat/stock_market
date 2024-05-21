@@ -81,7 +81,7 @@ def update_stock_data(ticker):
         join_df = pd.concat([orig_df, update_df])
         return join_df
     except Exception as ex:
-        logging.error(f"Error updating stock data for {ticker}: {ex}")
+        logging.error(f"Error updating stockDto data for {ticker}: {ex}")
         return None
 
 def save_dataframe_to_csv(df, folder, ticker):

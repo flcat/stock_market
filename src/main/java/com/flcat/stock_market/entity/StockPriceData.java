@@ -7,22 +7,23 @@ import lombok.Setter;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-@Entity
-@Table(name = "stock_data")
 @Getter
 @Setter
-public class StockData {
+@Entity
+@Table(name = "stock_price_data")
+public class StockPriceData {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    private String symbol;
+    private String ticker;
     private LocalDate date;
     private BigDecimal open;
     private BigDecimal high;
     private BigDecimal low;
     private BigDecimal close;
     private BigDecimal volume;
-    private BigDecimal movingAverage;
 
+    // Getters and setters
+    // ...
 }

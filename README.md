@@ -99,7 +99,7 @@ A: `stock_scripts/` 디렉터리에 새 Python 스크립트를 만들고, `Marke
 
 ## 스크린샷
 
-<!--![주가 페이지](screenshots/stock-price.png)
+<!--![주가 페이지](screenshots/stockDto-price.png)
 ![주문 페이지](screenshots/order.png)
 (프로젝트의 UI와 기능을 보여주는 관련 스크린샷 또는 GIF 추가)
 --!>

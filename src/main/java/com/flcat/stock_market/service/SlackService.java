@@ -1,6 +1,6 @@
 package com.flcat.stock_market.service;
 
-import com.flcat.stock_market.dto.Stock;
+import com.flcat.stock_market.dto.StockDto;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -21,14 +21,15 @@ public class SlackService {
         this.webhookUrl = webhookUrl;
     }
 
-    public void sendStockPriceToSlack(List<Stock> stockList) {
+    public void sendStockPriceToSlack(List<StockDto> stockDtoList) {
         StringBuilder message = new StringBuilder();
-        for (Stock stock : stockList) {
-            message.append("Open: ").append(stock.getOpen()).append("\n");
-            message.append("High: ").append(stock.getHigh()).append("\n");
-            message.append("Low: ").append(stock.getLow()).append("\n");
-            message.append("Close: ").append(stock.getClose()).append("\n");
-            message.append("Volume: ").append(stock.getVolume()).append("\n");
+        for (StockDto stockDto : stockDtoList) {
+            message.append("Open: ").append(stockDto.getOpen()).append("\n");
+            message.append("High: ").append(stockDto.getHigh()).append("\n");
+            message.append("Low: ").append(stockDto.getLow()).append("\n");
+            message.append("Close: ").append(stockDto.getClose()).append("\n");
+            message.append("Adj Close: ").append(stockDto.getAdjClose()).append("\n");
+            message.append("Volume: ").append(stockDto.getVolume()).append("\n");
             message.append("\n");
         }
 

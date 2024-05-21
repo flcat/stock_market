@@ -1,6 +1,6 @@
 package com.flcat.stock_market.service;
 
-import com.flcat.stock_market.dto.Stock;
+import com.flcat.stock_market.dto.StockDto;
 import com.flcat.stock_market.exception.InvalidJsonFormatException;
 import com.flcat.stock_market.exception.MarketPriceException;
 import com.google.gson.JsonArray;
@@ -31,21 +31,29 @@ import java.util.stream.Collectors;
 public class PriceService {
     private final Logger logger = LoggerFactory.getLogger(PriceService.class);
 
-    public Page<Stock> getMarketPriceFromPython(String ticker, String search, Pageable pageable) throws IOException, InterruptedException {
+    public Page<StockDto> getMarketPriceFromPython(String ticker, String search, Pageable pageable) throws IOException, InterruptedException {
         String result = executeMarketPriceScript(ticker, search);
-        List<Stock> stockList = parseJsonResult(result);
-        List<Stock> filteredStockList = filterStockList(stockList, search);
+        List<StockDto> stockDtoList = parseJsonResult(result);
+        List<StockDto> filteredStockListDto = filterStockList(stockDtoList, search);
 
         int start = (int) pageable.getOffset();
-        int end = (int) (Math.min((start + pageable.getPageSize()), filteredStockList.size()));
-        List<Stock> paginatedStockList = filteredStockList.subList(start, end);
+        int end = (int) (Math.min((start + pageable.getPageSize()), filteredStockListDto.size()));
+        List<StockDto> paginatedStockListDto = filteredStockListDto.subList(start, end);
 
-        return new PageImpl<>(paginatedStockList, pageable, filteredStockList.size());
+        return new PageImpl<>(paginatedStockListDto, pageable, filteredStockListDto.size());
     }
 
     private String executeMarketPriceScript(String ticker, String search) throws IOException, InterruptedException {
 //        String pythonScript = "/home/user/python_workspace/stock_list/nasdaq100_data_crawling.py";
-        String pythonScript = "/python_workspace/stock_list/nasdaq100_data_crawling.py";
+        String pythonScript = "/Users/jaechankwon/python_workspace/stock_list/nasdaq100_data_crawling.py";
+        if (ticker == null) {
+            ticker = "";
+        }
+
+        if (search == null) {
+            search = "";
+        }
+
         String[] command = {"/usr/bin/python3", pythonScript, ticker, search};
 
         ProcessBuilder processBuilder = new ProcessBuilder(command);
@@ -74,16 +82,16 @@ public class PriceService {
         }
     }
 
-    private List<Stock> parseJsonResult(String result) {
+    private List<StockDto> parseJsonResult(String result) {
         try {
             JsonElement jsonElement = JsonParser.parseString(result);
             JsonArray jsonArray = jsonElement.getAsJsonArray();
-            List<Stock> priceList = new ArrayList<>();
+            List<StockDto> priceList = new ArrayList<>();
 
             for (JsonElement element : jsonArray) {
                 JsonObject jsonObject = element.getAsJsonObject();
 
-                Stock stock = Stock.builder()
+                StockDto stockDto = StockDto.builder()
                         .date(LocalDate.parse(jsonObject.get("date").getAsString()))
                         .open(jsonObject.get("open").getAsJsonObject().getAsBigDecimal())
                         .high(jsonObject.get("high").getAsJsonObject().getAsBigDecimal())
@@ -91,7 +99,7 @@ public class PriceService {
                         .close(jsonObject.get("close").getAsJsonObject().getAsBigDecimal())
                         .volume(jsonObject.get("volume").getAsJsonObject().getAsBigDecimal())
                         .build();
-                priceList.add(stock);
+                priceList.add(stockDto);
             }
 
             return priceList;
@@ -104,12 +112,12 @@ public class PriceService {
         }
     }
 
-    private List<Stock> filterStockList(List<Stock> stockList, String search) {
+    private List<StockDto> filterStockList(List<StockDto> stockDtoList, String search) {
         if (search.isEmpty()) {
-            return stockList;
+            return stockDtoList;
         }
-        return stockList.stream()
-                .filter(stock -> stock.toString().toLowerCase().contains(search.toLowerCase()))
+        return stockDtoList.stream()
+                .filter(stockDto -> stockDto.toString().toLowerCase().contains(search.toLowerCase()))
                 .collect(Collectors.toList());
     }
 }

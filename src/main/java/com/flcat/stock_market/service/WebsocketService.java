@@ -1,4 +1,4 @@
-package com.flcat.stock_market.service.impl;
+package com.flcat.stock_market.service;
 
 import com.flcat.stock_market.exception.FailedResponseException;
 import com.flcat.stock_market.util.AuthenticationManager;

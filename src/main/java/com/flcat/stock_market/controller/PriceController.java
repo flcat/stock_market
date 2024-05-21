@@ -1,6 +1,6 @@
 package com.flcat.stock_market.controller;
 
-import com.flcat.stock_market.dto.Stock;
+import com.flcat.stock_market.dto.StockDto;
 import com.flcat.stock_market.service.PriceService;
 import com.flcat.stock_market.service.SlackService;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +29,7 @@ public class PriceController {
         long startTime = System.currentTimeMillis();
         try {
             this.startedInfoLog("getNasdaqStockPrice");
-            Page<Stock> stockPricePage = priceService.getMarketPriceFromPython(ticker,search, pageable);
+            Page<StockDto> stockPricePage = priceService.getMarketPriceFromPython(ticker,search, pageable);
             slackService.sendStockPriceToSlack(stockPricePage.getContent());
             model.addAttribute("stockPricePage", stockPricePage);
             model.addAttribute("search", search);
