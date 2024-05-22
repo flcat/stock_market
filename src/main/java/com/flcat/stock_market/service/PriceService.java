@@ -2,14 +2,6 @@ package com.flcat.stock_market.service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.flcat.stock_market.dto.StockDto;
-import com.flcat.stock_market.exception.InvalidJsonFormatException;
-import com.flcat.stock_market.exception.MarketPriceException;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.google.gson.JsonSyntaxException;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,11 +11,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 @Service
@@ -31,38 +22,40 @@ public class PriceService {
     private final Logger logger = LoggerFactory.getLogger(PriceService.class);
 
     @Transactional
-    public List<Map<String, Object>> getMarketPriceFromPython(int page, int size) {
-        try {
-            // Python 스크립트 실행
-            executeMarketPriceScript();
+    public CompletableFuture<List<Map<String, Object>>> getMarketPriceFromPython(int page, int size) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                // Python 스크립트 실행
+                executeMarketPriceScript();
 
-            // 티커 정보가 담긴 CSV 파일 경로
-            String csvFilePath = "/Users/jaechankwon/python_workspace/stock_list/Wilshire-20-Stocks.csv";
+                // 티커 정보가 담긴 CSV 파일 경로
+                String csvFilePath = "/Users/jaechankwon/python_workspace/stock_list/Wilshire-20-Stocks.csv";
 
-            // CSV 파일 읽기
-            List<String> tickers = readTickersFromCsv(csvFilePath);
+                // CSV 파일 읽기
+                List<String> tickers = readTickersFromCsv(csvFilePath);
 
-            // 결과 저장할 리스트
-            List<Map<String, Object>> resultList = new ArrayList<>();
+                // 결과 저장할 리스트
+                List<Map<String, Object>> resultList = new ArrayList<>();
 
-            // 각 티커에 대한 JSON 파일 읽기
-            for (String ticker : tickers) {
-                String jsonFilePath = "/Users/jaechankwon/python_workspace/stock_list/" + ticker + ".json";
-                if (Files.exists(Paths.get(jsonFilePath))) {
-                    List<Map<String, Object>> tickerResultList = readJsonFile(jsonFilePath);
-                    resultList.addAll(tickerResultList);
-                } else {
-                    log.warn("JSON file not found for ticker: {}", ticker);
+                // 각 티커에 대한 JSON 파일 읽기
+                for (String ticker : tickers) {
+                    String jsonFilePath = "/Users/jaechankwon/python_workspace/stock_list/" + ticker + ".json";
+                    if (Files.exists(Paths.get(jsonFilePath))) {
+                        List<Map<String, Object>> tickerResultList = readJsonFile(jsonFilePath);
+                        resultList.addAll(tickerResultList);
+                    } else {
+                        log.warn("JSON file not found for ticker: {}", ticker);
+                    }
                 }
-            }
 
-            // 페이지네이션 적용
-            int start = (page - 1) * size;
-            int end = Math.min(start + size, resultList.size());
-            return resultList.subList(start, end);
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to read result files", e);
-        }
+                // 페이지네이션 적용
+                int start = (page - 1) * size;
+                int end = Math.min(start + size, resultList.size());
+                return resultList.subList(start, end);
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to read result files", e);
+            }
+        });
     }
 
     // CSV 파일에서 티커 정보 읽어오기
@@ -145,42 +138,4 @@ public class PriceService {
         }
     }
 
-    private List<StockDto> parseJsonResult(String result) {
-        try {
-            JsonElement jsonElement = JsonParser.parseString(result);
-            JsonArray jsonArray = jsonElement.getAsJsonArray();
-            List<StockDto> priceList = new ArrayList<>();
-
-            for (JsonElement element : jsonArray) {
-                JsonObject jsonObject = element.getAsJsonObject();
-
-                StockDto stockDto = StockDto.builder()
-                        .date(LocalDate.parse(jsonObject.get("date").getAsString()))
-                        .open(jsonObject.get("open").getAsJsonObject().getAsBigDecimal())
-                        .high(jsonObject.get("high").getAsJsonObject().getAsBigDecimal())
-                        .low(jsonObject.get("low").getAsJsonObject().getAsBigDecimal())
-                        .close(jsonObject.get("close").getAsJsonObject().getAsBigDecimal())
-                        .volume(jsonObject.get("volume").getAsJsonObject().getAsBigDecimal())
-                        .build();
-                priceList.add(stockDto);
-            }
-
-            return priceList;
-        } catch (JsonSyntaxException e) {
-            logger.warn("Invalid JSON format: [result: {}]", result);
-            throw new InvalidJsonFormatException("Invalid JSON format in the script result.", e);
-        } catch (Exception e) {
-            logger.error("Failed to parse price: [result: {}]", result, e);
-            throw new MarketPriceException("Failed to parse price", e);
-        }
-    }
-
-    private List<StockDto> filterStockList(List<StockDto> stockDtoList, String search) {
-        if (search.isEmpty()) {
-            return stockDtoList;
-        }
-        return stockDtoList.stream()
-                .filter(stockDto -> stockDto.toString().toLowerCase().contains(search.toLowerCase()))
-                .collect(Collectors.toList());
-    }
 }

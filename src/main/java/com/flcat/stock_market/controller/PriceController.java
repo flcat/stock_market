@@ -10,8 +10,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 @Controller
@@ -30,22 +30,28 @@ public class PriceController {
 
     @GetMapping("/nasdaq/data")
     @ResponseBody
-    public ResponseEntity<PageResponse<Map<String, Object>>> getNasdaqStockPrice(
+    public CompletableFuture<ResponseEntity<PageResponse<Map<String, Object>>>> getNasdaqStockPrice(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
-        List<Map<String, Object>> resultList = priceService.getMarketPriceFromPython(page, size);
-        int totalElements = priceService.getTotalElements();
-        int totalPages = (int) Math.ceil((double) totalElements / size);
+        long startTime = System.currentTimeMillis();
+        startedInfoLog("getNasdaqStockPrice");
 
-        PageResponse<Map<String, Object>> response = new PageResponse<>();
-        response.setContent(resultList);
-        response.setPage(page);
-        response.setSize(size);
-        response.setTotalElements(totalElements);
-        response.setTotalPages(totalPages);
+        return priceService.getMarketPriceFromPython(page, size)
+                .thenApply(resultList -> {
+                    int totalElements = priceService.getTotalElements();
+                    int totalPages = (int) Math.ceil((double) totalElements / size);
 
-        return ResponseEntity.ok(response);
+                    PageResponse<Map<String, Object>> response = new PageResponse<>();
+                    response.setContent(resultList);
+                    response.setPage(page);
+                    response.setSize(size);
+                    response.setTotalElements(totalElements);
+                    response.setTotalPages(totalPages);
+
+                    finishedInfoLog("getNasdaqStockPrice", startTime);
+                    return ResponseEntity.ok(response);
+                });
     }
 
     private void startedInfoLog(String methodName) {

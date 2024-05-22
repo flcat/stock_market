@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nasdaq-100 Stock Prices</title>
+    <title>Nasdaq Stock Prices</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script th:inline="javascript">
@@ -18,16 +18,17 @@
                         data.content.forEach(stock => {
                             const tr = document.createElement('tr');
                             tr.innerHTML = `
-                            <td>${stock.output.rsym}</td>
-                            <td>${stock.output.last}</td>
-                            <td>${stock.output.rate}</td>
-                        `;
+                                <td>${stock.output.rsym}</td>
+                                <td>${stock.output.last}</td>
+                                <td>${stock.output.tvol}</td>
+                                <td>${stock.output.sign}${stock.output.diff} (${stock.output.rate})</td>
+                            `;
                             stockList.appendChild(tr);
                         });
                     } else {
                         const tr = document.createElement('tr');
                         const td = document.createElement('td');
-                        td.setAttribute('colspan', '3');
+                        td.setAttribute('colspan', '7');
                         td.textContent = 'No data available';
                         tr.appendChild(td);
                         stockList.appendChild(tr);
@@ -44,25 +45,47 @@
             const pagination = document.getElementById('pagination');
             pagination.innerHTML = '';
 
-            for (let i = 1; i <= totalPages; i++) {
-                const li = document.createElement('li');
-                li.classList.add('page-item');
-                if (i === currentPage) {
-                    li.classList.add('active');
-                }
+            const firstPageItem = createPageItem(1, '&laquo;', currentPage === 1);
+            pagination.appendChild(firstPageItem);
 
-                const a = document.createElement('a');
-                a.classList.add('page-link');
-                a.textContent = i;
-                a.href = '#';
-                a.addEventListener('click', (event) => {
-                    event.preventDefault();
-                    fetchData(i, 10);
-                });
+            const prevPageItem = createPageItem(currentPage - 1, '&lsaquo;', currentPage === 1);
+            pagination.appendChild(prevPageItem);
 
-                li.appendChild(a);
-                pagination.appendChild(li);
+            const startPage = Math.max(1, currentPage - 2);
+            const endPage = Math.min(totalPages, currentPage + 2);
+
+            for (let i = startPage; i <= endPage; i++) {
+                const pageItem = createPageItem(i, i, i === currentPage);
+                pagination.appendChild(pageItem);
             }
+
+            const nextPageItem = createPageItem(currentPage + 1, '&rsaquo;', currentPage === totalPages);
+            pagination.appendChild(nextPageItem);
+
+            const lastPageItem = createPageItem(totalPages, '&raquo;', currentPage === totalPages);
+            pagination.appendChild(lastPageItem);
+        }
+
+        function createPageItem(page, text, isDisabled) {
+            const li = document.createElement('li');
+            li.classList.add('page-item');
+            if (isDisabled) {
+                li.classList.add('disabled');
+            }
+
+            const a = document.createElement('a');
+            a.classList.add('page-link');
+            a.href = '#';
+            a.innerHTML = text;
+            a.addEventListener('click', (event) => {
+                event.preventDefault();
+                if (!isDisabled) {
+                    fetchData(page, 10);
+                }
+            });
+
+            li.appendChild(a);
+            return li;
         }
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -72,12 +95,13 @@
 </head>
 <body>
 <div class="container mt-4">
-    <h1>Nasdaq-100 Stock Prices</h1>
+    <h1>Nasdaq Stock Prices</h1>
     <table class="table">
         <thead>
         <tr>
             <th>Symbol</th>
-            <th>Last Price</th>
+            <th>Last</th>
+            <th>Volume</th>
             <th>Change</th>
         </tr>
         </thead>
