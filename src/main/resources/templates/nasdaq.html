@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nasdaq-100 Stock Prices</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script th:inline="javascript">
+        function fetchData(page, size) {
+            axios.get(`/api/v1/price/nasdaq/data?page=${page}&size=${size}`)
+                .then(response => {
+                    const data = response.data;
+                    const stockList = document.getElementById('stock-list');
+                    stockList.innerHTML = '';
+
+                    if (data.content && data.content.length > 0) {
+                        data.content.forEach(stock => {
+                            const tr = document.createElement('tr');
+                            tr.innerHTML = `
+                            <td>${stock.output.rsym}</td>
+                            <td>${stock.output.last}</td>
+                            <td>${stock.output.rate}</td>
+                        `;
+                            stockList.appendChild(tr);
+                        });
+                    } else {
+                        const tr = document.createElement('tr');
+                        const td = document.createElement('td');
+                        td.setAttribute('colspan', '3');
+                        td.textContent = 'No data available';
+                        tr.appendChild(td);
+                        stockList.appendChild(tr);
+                    }
+
+                    updatePagination(data.page, data.totalPages);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+
+        function updatePagination(currentPage, totalPages) {
+            const pagination = document.getElementById('pagination');
+            pagination.innerHTML = '';
+
+            for (let i = 1; i <= totalPages; i++) {
+                const li = document.createElement('li');
+                li.classList.add('page-item');
+                if (i === currentPage) {
+                    li.classList.add('active');
+                }
+
+                const a = document.createElement('a');
+                a.classList.add('page-link');
+                a.textContent = i;
+                a.href = '#';
+                a.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    fetchData(i, 10);
+                });
+
+                li.appendChild(a);
+                pagination.appendChild(li);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchData(1, 10);
+        });
+    </script>
+</head>
+<body>
+<div class="container mt-4">
+    <h1>Nasdaq-100 Stock Prices</h1>
+    <table class="table">
+        <thead>
+        <tr>
+            <th>Symbol</th>
+            <th>Last Price</th>
+            <th>Change</th>
+        </tr>
+        </thead>
+        <tbody id="stock-list"></tbody>
+    </table>
+    <nav>
+        <ul class="pagination" id="pagination"></ul>
+    </nav>
+</div>
+</body>
+</html>

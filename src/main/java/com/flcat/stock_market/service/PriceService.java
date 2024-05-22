@@ -1,5 +1,7 @@
 package com.flcat.stock_market.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.flcat.stock_market.dto.StockDto;
 import com.flcat.stock_market.exception.InvalidJsonFormatException;
 import com.flcat.stock_market.exception.MarketPriceException;
@@ -8,77 +10,138 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
+import java.util.Map;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
-@Transactional(readOnly = true)
 public class PriceService {
     private final Logger logger = LoggerFactory.getLogger(PriceService.class);
 
-    public Page<StockDto> getMarketPriceFromPython(String ticker, String search, Pageable pageable) throws IOException, InterruptedException {
-        String result = executeMarketPriceScript(ticker, search);
-        List<StockDto> stockDtoList = parseJsonResult(result);
-        List<StockDto> filteredStockListDto = filterStockList(stockDtoList, search);
+    @Transactional
+    public List<Map<String, Object>> getMarketPriceFromPython(int page, int size) {
+        try {
+            // Python 스크립트 실행
+            executeMarketPriceScript();
 
-        int start = (int) pageable.getOffset();
-        int end = (int) (Math.min((start + pageable.getPageSize()), filteredStockListDto.size()));
-        List<StockDto> paginatedStockListDto = filteredStockListDto.subList(start, end);
+            // 티커 정보가 담긴 CSV 파일 경로
+            String csvFilePath = "/Users/jaechankwon/python_workspace/stock_list/Wilshire-20-Stocks.csv";
 
-        return new PageImpl<>(paginatedStockListDto, pageable, filteredStockListDto.size());
+            // CSV 파일 읽기
+            List<String> tickers = readTickersFromCsv(csvFilePath);
+
+            // 결과 저장할 리스트
+            List<Map<String, Object>> resultList = new ArrayList<>();
+
+            // 각 티커에 대한 JSON 파일 읽기
+            for (String ticker : tickers) {
+                String jsonFilePath = "/Users/jaechankwon/python_workspace/stock_list/" + ticker + ".json";
+                if (Files.exists(Paths.get(jsonFilePath))) {
+                    List<Map<String, Object>> tickerResultList = readJsonFile(jsonFilePath);
+                    resultList.addAll(tickerResultList);
+                } else {
+                    log.warn("JSON file not found for ticker: {}", ticker);
+                }
+            }
+
+            // 페이지네이션 적용
+            int start = (page - 1) * size;
+            int end = Math.min(start + size, resultList.size());
+            return resultList.subList(start, end);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to read result files", e);
+        }
     }
 
-    private String executeMarketPriceScript(String ticker, String search) throws IOException, InterruptedException {
-//        String pythonScript = "/home/user/python_workspace/stock_list/nasdaq100_data_crawling.py";
-        String pythonScript = "/Users/jaechankwon/python_workspace/stock_list/nasdaq100_data_crawling.py";
-        if (ticker == null) {
-            ticker = "";
+    // CSV 파일에서 티커 정보 읽어오기
+    private List<String> readTickersFromCsv(String csvFilePath) throws IOException {
+        List<String> tickers = new ArrayList<>();
+        BufferedReader reader = new BufferedReader(new FileReader(csvFilePath));
+        String line;
+        while ((line = reader.readLine()) != null) {
+            String[] values = line.split(",");
+            if (values.length > 0) {
+                tickers.add(values[0]);
+            }
         }
+        reader.close();
+        return tickers;
+    }
 
-        if (search == null) {
-            search = "";
-        }
+    // JSON 파일 읽어서 List<Map<String, Object>>로 변환
+    private List<Map<String, Object>> readJsonFile(String jsonFilePath) throws IOException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        return objectMapper.readValue(new File(jsonFilePath), new TypeReference<List<Map<String, Object>>>() {});
+    }
+    public void executeMarketPriceScript() {
+        try {
+            String scriptPath = "/Users/jaechankwon/python_workspace/stock_list/nasdaq100_data_crawling.py";
 
-        String[] command = {"/usr/bin/python3", pythonScript, ticker, search};
+            String[] cmd = new String[2];
+            cmd[0] = "python3";
+            cmd[1] = scriptPath;
 
-        ProcessBuilder processBuilder = new ProcessBuilder(command);
-        processBuilder.redirectErrorStream(true);
+            ProcessBuilder pb = new ProcessBuilder(cmd);
+            Process process = pb.start();
 
-        Process process = processBuilder.start();
-
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8.name()))) {
-            StringBuilder result = new StringBuilder();
+            // 프로세스의 출력 스트림 읽기
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
             String line;
             while ((line = reader.readLine()) != null) {
-                result.append(line).append("\n");
-            }
-            return result.toString();
-        } finally {
-            boolean completed = process.waitFor(60, TimeUnit.SECONDS);
-            if (!completed) {
-                process.destroyForcibly();
-                throw new RuntimeException("Python script timed out");
+                System.out.println(line);
             }
 
-            int exitCode = process.exitValue();
+            int exitCode = process.waitFor();
             if (exitCode != 0) {
+                // 에러 스트림 읽기
+                BufferedReader errorReader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+                String errorLine;
+                while ((errorLine = errorReader.readLine()) != null) {
+                    System.err.println(errorLine);
+                }
                 throw new RuntimeException("Python script exited with code " + exitCode);
             }
+        } catch (IOException | InterruptedException e) {
+            throw new RuntimeException("Failed to execute Python script", e);
+        }
+    }
+
+    public int getTotalElements() {
+        try {
+            // 티커 정보가 담긴 CSV 파일 경로
+            String csvFilePath = "/Users/jaechankwon/python_workspace/stock_list/Wilshire-20-Stocks.csv";
+
+            // CSV 파일 읽기
+            List<String> tickers = readTickersFromCsv(csvFilePath);
+
+            int totalElements = 0;
+
+            // 각 티커에 대한 JSON 파일 읽기
+            for (String ticker : tickers) {
+                String jsonFilePath = "/Users/jaechankwon/python_workspace/stock_list/" + ticker + ".json";
+                if (Files.exists(Paths.get(jsonFilePath))) {
+                    List<Map<String, Object>> tickerResultList = readJsonFile(jsonFilePath);
+                    totalElements += tickerResultList.size();
+                } else {
+                    log.warn("JSON file not found for ticker: {}", ticker);
+                }
+            }
+
+            return totalElements;
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to read result files", e);
         }
     }
 
