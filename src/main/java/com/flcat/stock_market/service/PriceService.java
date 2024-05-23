@@ -14,48 +14,44 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 @Service
 public class PriceService {
-    private final Logger logger = LoggerFactory.getLogger(PriceService.class);
 
     @Transactional
-    public CompletableFuture<List<Map<String, Object>>> getMarketPriceFromPython(int page, int size) {
-        return CompletableFuture.supplyAsync(() -> {
-            try {
-                // Python 스크립트 실행
-                executeMarketPriceScript();
+    public List<Map<String, Object>> getMarketPriceFromPython(int page, int size) {
+        try {
+            // Python 스크립트 실행
+            executeMarketPriceScript();
 
-                // 티커 정보가 담긴 CSV 파일 경로
-                String csvFilePath = "/Users/jaechankwon/python_workspace/stock_list/Wilshire-20-Stocks.csv";
+            // 티커 정보가 담긴 CSV 파일 경로
+            String csvFilePath = "/Users/jaechankwon/python_workspace/stock_list/Wilshire-20-Stocks.csv";
 
-                // CSV 파일 읽기
-                List<String> tickers = readTickersFromCsv(csvFilePath);
+            // CSV 파일 읽기
+            List<String> tickers = readTickersFromCsv(csvFilePath);
 
-                // 결과 저장할 리스트
-                List<Map<String, Object>> resultList = new ArrayList<>();
+            // 결과 저장할 리스트
+            List<Map<String, Object>> resultList = new ArrayList<>();
 
-                // 각 티커에 대한 JSON 파일 읽기
-                for (String ticker : tickers) {
-                    String jsonFilePath = "/Users/jaechankwon/python_workspace/stock_list/" + ticker + ".json";
-                    if (Files.exists(Paths.get(jsonFilePath))) {
-                        List<Map<String, Object>> tickerResultList = readJsonFile(jsonFilePath);
-                        resultList.addAll(tickerResultList);
-                    } else {
-                        log.warn("JSON file not found for ticker: {}", ticker);
-                    }
+            // 각 티커에 대한 JSON 파일 읽기
+            for (String ticker : tickers) {
+                String jsonFilePath = "/Users/jaechankwon/python_workspace/stock_list/" + ticker + ".json";
+                if (Files.exists(Paths.get(jsonFilePath))) {
+                    List<Map<String, Object>> tickerResultList = readJsonFile(jsonFilePath);
+                    resultList.addAll(tickerResultList);
+                } else {
+                    log.warn("JSON file not found for ticker: {}", ticker);
                 }
-
-                // 페이지네이션 적용
-                int start = (page - 1) * size;
-                int end = Math.min(start + size, resultList.size());
-                return resultList.subList(start, end);
-            } catch (IOException e) {
-                throw new RuntimeException("Failed to read result files", e);
             }
-        });
+
+            // 페이지네이션 적용
+            int start = (page - 1) * size;
+            int end = Math.min(start + size, resultList.size());
+            return resultList.subList(start, end);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to read result files", e);
+        }
     }
 
     // CSV 파일에서 티커 정보 읽어오기
